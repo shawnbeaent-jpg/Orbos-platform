@@ -1,0 +1,139 @@
+// ORBOS Platform — database schema
+// Mirrors the tabs of the ORBOS_CRM_Tracker.xlsx: Companies, Contacts, Sales Pipeline,
+// Marketing Assets, Routes. Run npx prisma migrate dev --name init after setting DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Priority {
+  A
+  B
+  C
+}
+
+enum Status {
+  NEW_LEAD
+  CONTACTED
+  QUALIFIED
+  APPOINTMENT_SET
+  PROPOSAL_SENT
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum PipelineStage {
+  LEAD
+  CONTACTED
+  QUALIFIED
+  MEETING
+  PROPOSAL
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("owner") // "owner" | "viewer" — expand only when you have a real team
+  createdAt DateTime @default(now())
+}
+
+model Company {
+  id                String          @id @default(cuid())
+  name              String
+  industry          String
+  address           String
+  city              String
+  phone             String?
+  website           String?
+  contactPerson     String?         // role placeholder until a named contact is confirmed
+  priority          Priority
+  status            Status          @default(NEW_LEAD)
+  estDealValueCents Int?            // stored in cents, format as dollars in the UI
+  latitude          Float?
+  longitude         Float?
+  notes             String?
+  dateAdded         DateTime        @default(now())
+  lastContactDate   DateTime?
+  contacts          Contact[]
+  pipelineEntries   PipelineEntry[]
+  routeStops        RouteStop[]
+
+  @@index([priority])
+  @@index([status])
+}
+
+model Contact {
+  id                      String    @id @default(cuid())
+  companyId               String
+  company                 Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                    String
+  title                   String?
+  email                   String?
+  phone                   String?
+  preferredContactMethod  String?
+  lastContactDate         DateTime?
+  notes                   String?
+}
+
+model PipelineEntry {
+  id                  String        @id @default(cuid())
+  companyId           String
+  company             Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  stage               PipelineStage @default(LEAD)
+  estimatedValueCents Int?
+  probability         Float?        // stored as a fraction, e.g. 0.5 = 50%
+  expectedCloseDate   DateTime?
+  owner               String?
+  notes               String?
+  updatedAt           DateTime      @updatedAt
+}
+
+model MarketingAsset {
+  id          String   @id @default(cuid())
+  assetName   String
+  campaign    String?
+  industry    String?
+  assetLink   String?
+  status      String   @default("Draft") // Draft | In Review | Approved | Published | Archived
+  dateCreated DateTime @default(now())
+}
+
+model Route {
+  id    String      @id @default(cuid())
+  name  String
+  date  DateTime
+  stops RouteStop[]
+}
+
+model RouteStop {
+  id              String  @id @default(cuid())
+  routeId         String
+  route           Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  companyId       String
+  company         Company @relation(fields: [companyId], references: [id])
+  stopOrder       Int
+  purpose         String?
+  estDistanceMi   Float?
+  estDriveTimeMin Int?
+  notes           String?
+}
+
+// AI agent output is logged, never silently applied — a human confirms before it
+// affects Company/PipelineEntry data. See CLAUDE.md "Do not" section.
+model AgentSuggestion {
+  id        String   @id @default(cuid())
+  agentType String   // "lead_scoring" | "email_draft" | ...
+  companyId String?
+  input     String   // JSON-serialized input context
+  output    String   // JSON-serialized suggested output
+  accepted  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
