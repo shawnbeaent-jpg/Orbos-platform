@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
-import { Disc3, Plus, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Disc3, Plus, X, UploadCloud, CreditCard, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
-import { Badge, Card, PageHeader, SectionTitle, Table, statusTone } from '../components/ui';
+import { Badge, Card, PageHeader, SectionTitle, Table, formatCents, statusTone } from '../components/ui';
 import { BeatStatus } from '../types';
 
 const KEYS = ['C Major', 'C Minor', 'D Major', 'D Minor', 'E Minor', 'F Major', 'F# Minor', 'G Major', 'A Major', 'A Minor', 'B Minor'];
 const GENRES = ['Trap', 'Drill', 'Alt R&B', 'Pop', 'Boom Bap', 'Afrobeats', 'Melodic Rap'];
 const BEAT_STATUSES: BeatStatus[] = ['Pending', 'Under Review', 'Artist Hold', 'Placed', 'Passed'];
+const REQUIRED_VISION_ARTISTS = 5;
+const SUBMISSION_FEE_CENTS = 2500;
+
+const WaveformBars: React.FC<{ progress: number }> = ({ progress }) => {
+  const bars = useMemo(() => Array.from({ length: 40 }, () => 20 + Math.random() * 80), []);
+  return (
+    <div className="flex h-16 items-end gap-[3px] overflow-hidden rounded-lg border border-white/10 bg-midnight-900/60 px-2 py-2">
+      {bars.map((h, i) => {
+        const litUpTo = (progress / 100) * bars.length;
+        const lit = i < litUpTo;
+        return <div key={i} className={`w-1.5 rounded-sm transition-colors ${lit ? 'bg-gold-400' : 'bg-white/10'}`} style={{ height: `${h}%` }} />;
+      })}
+    </div>
+  );
+};
 
 const ProducerConsole: React.FC = () => {
   const { beats, addBeatSubmission, updateBeatStatus, currentUser } = useApp();
@@ -18,16 +33,54 @@ const ProducerConsole: React.FC = () => {
   const [visionInput, setVisionInput] = useState('');
   const [visionArtists, setVisionArtists] = useState<string[]>([]);
 
+  const [audioFileName, setAudioFileName] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [feePaid, setFeePaid] = useState(false);
+  const [processingFee, setProcessingFee] = useState(false);
+
+  const visionComplete = visionArtists.length === REQUIRED_VISION_ARTISTS;
+  const canSubmit = !!title.trim() && visionComplete && !!audioFileName && feePaid;
+
   const addVisionArtist = () => {
     const v = visionInput.trim();
-    if (v && visionArtists.length < 5 && !visionArtists.includes(v)) {
+    if (v && visionArtists.length < REQUIRED_VISION_ARTISTS && !visionArtists.includes(v)) {
       setVisionArtists([...visionArtists, v]);
       setVisionInput('');
     }
   };
 
+  const handleFileSelect = (file: File | undefined) => {
+    if (!file) return;
+    setAudioFileName(file.name);
+    setUploadProgress(0);
+    setUploading(true);
+    const interval = setInterval(() => {
+      setUploadProgress((p) => {
+        if (p >= 100) {
+          clearInterval(interval);
+          setUploading(false);
+          return 100;
+        }
+        return p + 8;
+      });
+    }, 80);
+  };
+
+  const processFee = () => {
+    if (cardNumber.replace(/\s/g, '').length < 12 || !cardExpiry) return;
+    setProcessingFee(true);
+    setTimeout(() => {
+      setProcessingFee(false);
+      setFeePaid(true);
+    }, 900);
+  };
+
   const submit = () => {
-    if (!title.trim() || !currentUser) return;
+    if (!canSubmit || !currentUser) return;
     addBeatSubmission({
       id: `beat-${Date.now()}`,
       producerId: currentUser.id,
@@ -38,14 +91,20 @@ const ProducerConsole: React.FC = () => {
       genre,
       visionArtists,
       status: 'Pending',
-      submissionFeePaid: false,
+      submissionFeePaid: true,
       contractStatus: 'N/A',
       releaseStatus: 'Unreleased',
       submittedDate: new Date().toISOString().slice(0, 10),
+      audioFileName: audioFileName ?? undefined,
     });
     setTitle('');
     setBpm(120);
     setVisionArtists([]);
+    setAudioFileName(null);
+    setUploadProgress(0);
+    setCardNumber('');
+    setCardExpiry('');
+    setFeePaid(false);
     setShowForm(false);
   };
 
@@ -54,7 +113,7 @@ const ProducerConsole: React.FC = () => {
       <PageHeader
         eyebrow="Beat Marketplace & Placements"
         title="Producer Console"
-        description="Submit instrumentals, tag vision artists, and track every submission from pending to placed."
+        description="Submit instrumentals, tag exactly 5 vision artists, and track every submission from pending to placed."
         action={
           <button onClick={() => setShowForm((v) => !v)} className="btn-gold">
             {showForm ? <X size={15} /> : <Plus size={15} />} {showForm ? 'Cancel' : 'Submit Beat'}
@@ -64,7 +123,7 @@ const ProducerConsole: React.FC = () => {
 
       {showForm && (
         <Card className="mb-6">
-          <SectionTitle sub="Up to 5 vision artists per submission">
+          <SectionTitle sub="Exactly 5 vision artists required per submission">
             <span className="inline-flex items-center gap-2"><Disc3 size={16} className="text-gold-400" /> New Submission</span>
           </SectionTitle>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -89,7 +148,9 @@ const ProducerConsole: React.FC = () => {
               </select>
             </div>
             <div className="md:col-span-2">
-              <p className="label-mono mb-1.5">Vision Artists ({visionArtists.length}/5)</p>
+              <p className="label-mono mb-1.5">
+                Vision Artists ({visionArtists.length}/{REQUIRED_VISION_ARTISTS}){!visionComplete && <span className="ml-2 text-amber-400">— exactly 5 required</span>}
+              </p>
               <div className="mb-2 flex flex-wrap gap-1.5">
                 {visionArtists.map((v) => (
                   <Badge key={v} tone="gold">
@@ -105,15 +166,54 @@ const ProducerConsole: React.FC = () => {
                   value={visionInput}
                   onChange={(e) => setVisionInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addVisionArtist()}
-                  disabled={visionArtists.length >= 5}
+                  disabled={visionArtists.length >= REQUIRED_VISION_ARTISTS}
                   className="input-dark"
                   placeholder="Type an artist name and press Enter"
                 />
-                <button onClick={addVisionArtist} className="btn-ghost shrink-0" disabled={visionArtists.length >= 5}>Add</button>
+                <button onClick={addVisionArtist} className="btn-ghost shrink-0" disabled={visionArtists.length >= REQUIRED_VISION_ARTISTS}>Add</button>
               </div>
             </div>
           </div>
-          <button onClick={submit} className="btn-gold mt-4">Submit for Review</button>
+
+          <div className="mt-5 border-t border-white/5 pt-5">
+            <p className="label-mono mb-2 flex items-center gap-1.5"><UploadCloud size={12} /> Audio File</p>
+            <label className="flex cursor-pointer flex-col gap-3">
+              <input type="file" accept="audio/*" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} />
+              <div className="rounded-lg border border-dashed border-gold-500/30 px-4 py-3 text-center text-xs text-charcoal-500 hover:border-gold-500/50">
+                {audioFileName ? audioFileName : 'Click to choose an audio file (WAV/MP3)'}
+              </div>
+            </label>
+            {audioFileName && (
+              <div className="mt-3 space-y-2">
+                <WaveformBars progress={uploadProgress} />
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+                  <div className="h-full rounded-full bg-gold-500 transition-all" style={{ width: `${uploadProgress}%` }} />
+                </div>
+                <p className="label-mono">{uploading ? `Uploading… ${uploadProgress}%` : 'Upload complete'}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5 border-t border-white/5 pt-5">
+            <p className="label-mono mb-2 flex items-center gap-1.5"><CreditCard size={12} /> Submission Fee — {formatCents(SUBMISSION_FEE_CENTS)}</p>
+            {feePaid ? (
+              <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+                <CheckCircle2 size={15} /> Submission fee paid
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_auto]">
+                <input value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="input-dark font-mono" placeholder="Card number" />
+                <input value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} className="input-dark font-mono" placeholder="MM/YY" />
+                <button onClick={processFee} disabled={processingFee} className="btn-gold shrink-0">
+                  {processingFee ? 'Processing…' : `Pay ${formatCents(SUBMISSION_FEE_CENTS)}`}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button onClick={submit} disabled={!canSubmit} className="btn-gold mt-5 w-full disabled:cursor-not-allowed disabled:opacity-40">
+            Submit for Review
+          </button>
         </Card>
       )}
 

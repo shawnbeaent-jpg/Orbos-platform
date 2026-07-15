@@ -3,7 +3,11 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppProvider } from './state/AppContext';
 import Layout from './components/Layout';
 import { RequireNavAccess, RequireSession } from './components/RouteGuard';
-import LoginView from './views/LoginView';
+import GatewayView from './views/GatewayView';
+import LabelModeLogin from './views/LabelModeLogin';
+import IndependentModeGateway from './views/IndependentModeGateway';
+import RegistrationWizard from './views/RegistrationWizard';
+import MasterCommandGateway from './views/MasterCommandGateway';
 import Dashboard from './views/Dashboard';
 import CampaignArchitect from './views/CampaignArchitect';
 import IndieRoadmap from './views/IndieRoadmap';
@@ -48,7 +52,11 @@ const App: React.FC = () => (
   <AppProvider>
     <HashRouter>
       <Routes>
-        <Route path="/" element={<LoginView />} />
+        <Route path="/" element={<GatewayView />} />
+        <Route path="/label" element={<LabelModeLogin />} />
+        <Route path="/independent" element={<IndependentModeGateway />} />
+        <Route path="/independent/register" element={<RegistrationWizard />} />
+        <Route path="/master" element={<MasterCommandGateway />} />
         <Route
           path="/app"
           element={

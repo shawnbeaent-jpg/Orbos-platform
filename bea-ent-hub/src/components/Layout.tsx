@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Command, LogOut, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Command, LogOut, ShieldCheck, ChevronDown, Moon, Sun } from 'lucide-react';
 import { NAV_ITEMS } from '../nav';
 import { ROLE_NAV_ACCESS, useApp } from '../state/AppContext';
 import { ROLE_LABELS } from '../types';
@@ -10,7 +10,7 @@ const SECTION_ORDER: NavItemSection[] = ['Command', 'Growth', 'Operations', 'Bus
 type NavItemSection = 'Command' | 'Growth' | 'Operations' | 'Business' | 'System';
 
 const Layout: React.FC = () => {
-  const { currentUser, logout, artists, activeArtistId, setActiveArtistId } = useApp();
+  const { currentUser, logout, artists, activeArtistId, setActiveArtistId, theme, toggleTheme } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -144,6 +144,14 @@ const Layout: React.FC = () => {
               <Command size={14} />
               <span>Universal Command</span>
               <kbd className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="btn-ghost !px-2.5 text-xs"
+              aria-label="Toggle dark/light theme"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
           </div>
         </header>

@@ -11,17 +11,20 @@ import {
   HotelStay,
   IndieMilestone,
   Invoice,
+  LegalEntityProfile,
   MarketCity,
   MediaAsset,
   NetworkingContact,
   OutreachContact,
   RoyaltySplit,
   SessionUser,
+  SubscriptionPlan,
   SystemLogLine,
   Task,
   UserRole,
   BeatSubmission,
 } from '../types';
+import { ROYALTY_ORG_LINKS } from './legalData';
 
 export const MOCK_USERS: SessionUser[] = [
   { id: 'u-admin', name: 'Jordan Vale', role: UserRole.ADMIN, avatarInitials: 'JV', clearanceLevel: 5, email: 'jordan.vale@beaent.io' },
@@ -225,6 +228,85 @@ export const MOCK_CAMPAIGNS: CampaignBlueprint[] = [
       { id: 'ms-5', label: 'Teaser clips cut', done: false, dueDate: '2026-07-20' },
       { id: 'ms-6', label: 'Influencer seeding wave 1', done: false, dueDate: '2026-07-28' },
     ],
+  },
+];
+
+export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  {
+    id: 'Hustler',
+    tagline: 'Get your foundation legal and get your first release out.',
+    monthlyCostCents: 2900,
+    commissionPct: 20,
+    audience: 'New indie artists & producers just getting started',
+    features: [
+      'Indie Roadmap + Legal Foundation checklist',
+      'Up to 2 active campaigns',
+      'Artist Vault (10GB)',
+      'Standard contract templates',
+      'Community chat channels',
+    ],
+    locked: ['Operating Agreement Generator', 'Producer beat submissions', 'AI Concierge'],
+  },
+  {
+    id: 'Mogul',
+    tagline: 'Full command of your business — legal, campaigns, and money.',
+    monthlyCostCents: 14900,
+    commissionPct: 8,
+    audience: 'Established indie artists and managers running multiple releases',
+    features: [
+      'Everything in Hustler',
+      'Full Campaign Architect + Lyrical DNA',
+      'Unlimited active campaigns',
+      'Artist Vault (500GB)',
+      'Operating Agreement Generator unlocked',
+      'All legal templates + custom variables',
+      'Priority booking routing',
+    ],
+    locked: ['Producer beat submissions'],
+  },
+  {
+    id: 'Hitmaker',
+    tagline: 'For producers placing beats and labels running a full roster.',
+    monthlyCostCents: 24900,
+    commissionPct: 5,
+    audience: 'Music producers and full-scale label operations',
+    features: [
+      'Everything in Mogul',
+      'Producer Console beat submissions unlocked',
+      'Beat placement engine access',
+      'Multi-artist manager oversight',
+      'AI Concierge across every module',
+    ],
+    locked: [],
+  },
+];
+
+export const MOCK_LEGAL_ENTITIES: LegalEntityProfile[] = [
+  {
+    artistId: 'artist-nova-sinclair',
+    jurisdictionAbbr: 'GA',
+    entityName: 'Nova Sinclair Music LLC',
+    entityType: 'LLC',
+    ein: '',
+    articlesFiled: false,
+    businessAddress: '',
+    mailboxProvider: null,
+    naicsCodes: [],
+    operatingAgreementGenerated: false,
+    operatingAgreementText: null,
+    bankChecklist: [
+      { id: 'bank-1', label: 'Approved Articles of Organization', done: false },
+      { id: 'bank-2', label: 'EIN confirmation letter (CP 575)', done: false },
+      { id: 'bank-3', label: 'Signed Operating Agreement', done: false },
+      { id: 'bank-4', label: 'Government-issued photo ID', done: false },
+      { id: 'bank-5', label: 'Initial deposit funds', done: false },
+    ],
+    royaltyRegistrations: (Object.keys(ROYALTY_ORG_LINKS) as (keyof typeof ROYALTY_ORG_LINKS)[]).map((org) => ({
+      org,
+      status: 'Not Started' as const,
+      url: ROYALTY_ORG_LINKS[org].url,
+      note: ROYALTY_ORG_LINKS[org].note,
+    })),
   },
 ];
 

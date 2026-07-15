@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ROLE_NAV_ACCESS, useApp } from '../state/AppContext';
+import AccessDenied from './AccessDenied';
 
 export const RequireSession: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useApp();
@@ -28,6 +29,6 @@ export const RequireNavAccess: React.FC<{ navId: string; children: React.ReactNo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navId, allowed]);
 
-  if (!allowed) return <Navigate to="/app/dashboard" replace />;
+  if (!allowed) return <AccessDenied node={navId} />;
   return <>{children}</>;
 };

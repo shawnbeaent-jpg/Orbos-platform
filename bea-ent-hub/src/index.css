@@ -2,12 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark;
+  /* "white" is repurposed as the theme-adaptive neutral tint token — every
+     border-white/N and bg-white/[N] utility in the app resolves through this,
+     so subtle glass borders/tints flip correctly in light mode without
+     touching every component. */
+  --color-white: 255 255 255;
+
+  --color-midnight-950: 0 0 0;
+  --color-midnight-900: 10 10 10;
+  --color-midnight-800: 18 18 18;
+  --color-midnight-700: 26 26 26;
+
+  --color-charcoal-800: 28 28 30;
+  --color-charcoal-700: 38 38 40;
+  --color-charcoal-600: 51 51 53;
+  --color-charcoal-500: 72 72 74;
+
+  --color-gold-50: 251 243 224;
+  --color-gold-100: 247 231 193;
+  --color-gold-200: 239 208 138;
+  --color-gold-300: 230 188 92;
+  --color-gold-400: 221 176 71;
+  --color-gold-500: 214 166 60;
+  --color-gold-600: 183 138 46;
+  --color-gold-700: 143 107 35;
+  --color-gold-800: 102 77 25;
+  --color-gold-900: 61 46 15;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-white: 20 16 8;
+
+  --color-midnight-950: 250 248 243;
+  --color-midnight-900: 255 255 255;
+  --color-midnight-800: 245 240 229;
+  --color-midnight-700: 235 227 208;
+
+  --color-charcoal-800: 235 230 218;
+  --color-charcoal-700: 210 202 184;
+  --color-charcoal-600: 120 112 96;
+  --color-charcoal-500: 58 50 34;
+
+  /* Text-emphasis shades (100-300) are remapped to deep gold/brown so
+     headings stay legible on a light page; accent shades (400-600) stay
+     close to brand gold since they read fine on white as icons/buttons. */
+  --color-gold-50: 250 244 228;
+  --color-gold-100: 122 90 21;
+  --color-gold-200: 105 76 16;
+  --color-gold-300: 92 67 13;
+  --color-gold-400: 179 138 46;
+  --color-gold-500: 197 152 51;
+  --color-gold-600: 168 128 38;
+  --color-gold-700: 130 98 28;
+  --color-gold-800: 95 71 20;
+  --color-gold-900: 61 46 15;
+}
+
 @layer base {
-  html {
-    color-scheme: dark;
-  }
   body {
-    @apply bg-midnight-950 text-charcoal-500 font-sans antialiased;
+    @apply bg-midnight-950 text-charcoal-500 font-sans antialiased transition-colors duration-300;
     background-image: radial-gradient(circle at 20% -10%, rgba(214, 166, 60, 0.08), transparent 55%),
       radial-gradient(circle at 90% 10%, rgba(214, 166, 60, 0.05), transparent 45%);
     background-attachment: fixed;
@@ -31,7 +87,8 @@
     @apply font-mono text-[10px] uppercase tracking-[0.2em] text-gold-500/70;
   }
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-gold-400 to-gold-600 px-4 py-2 text-sm font-semibold text-midnight-950 shadow-gold transition hover:shadow-gold-lg active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-gold-400 to-gold-600 px-4 py-2 text-sm font-semibold shadow-gold transition hover:shadow-gold-lg active:scale-[0.98];
+    color: #14100a;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-4 py-2 text-sm font-medium text-charcoal-500 transition hover:border-gold-500/30 hover:text-gold-200;

@@ -15,7 +15,7 @@ export enum UserRole {
 export const ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'BEA Master Control',
   [UserRole.MANAGER]: 'Manager',
-  [UserRole.INDIE]: 'Indie Artist',
+  [UserRole.INDIE]: 'Indie Artist (DIY)',
   [UserRole.PRODUCER]: 'Music Producer',
   [UserRole.ARTIST]: 'Artist',
   [UserRole.PR]: 'PR / Publicist',
@@ -24,6 +24,21 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.EDITOR]: 'Editor',
 };
 
+/** Roles reached through the Label Mode gateway (managed roster staff + managed artists). */
+export const LABEL_MODE_ROLES: UserRole[] = [
+  UserRole.MANAGER,
+  UserRole.ARTIST,
+  UserRole.PR,
+  UserRole.BOOKING_AGENT,
+  UserRole.ASSISTANT,
+  UserRole.EDITOR,
+];
+
+/** Roles reached through the Independent Mode gateway (self-managed). */
+export const INDEPENDENT_MODE_ROLES: UserRole[] = [UserRole.INDIE, UserRole.PRODUCER];
+
+export type ThemeMode = 'dark' | 'light';
+
 export interface SessionUser {
   id: string;
   name: string;
@@ -31,6 +46,19 @@ export interface SessionUser {
   avatarInitials: string;
   clearanceLevel: 1 | 2 | 3 | 4 | 5;
   email: string;
+  subscriptionTier?: SubscriptionTierId;
+}
+
+export type SubscriptionTierId = 'Hustler' | 'Mogul' | 'Hitmaker';
+
+export interface SubscriptionPlan {
+  id: SubscriptionTierId;
+  tagline: string;
+  monthlyCostCents: number;
+  commissionPct: number;
+  audience: string;
+  features: string[];
+  locked: string[];
 }
 
 export type TaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Blocked';
@@ -65,9 +93,11 @@ export interface BeatSubmission {
   status: BeatStatus;
   submissionFeePaid: boolean;
   acceptedBy?: string;
+  adminFeedback?: string;
   contractStatus: ContractStatus;
   releaseStatus: 'Unreleased' | 'Scheduled' | 'Released';
   submittedDate: string;
+  audioFileName?: string;
 }
 
 export type OutreachCategory = 'Playlist Curator' | 'Blog' | 'Radio Host' | 'Magazine' | 'DJ' | 'Promoter';
@@ -211,7 +241,7 @@ export interface Artist {
   id: string;
   name: string;
   genre: string;
-  subscriptionTier: 'Hustler' | 'Mogul';
+  subscriptionTier: SubscriptionTierId;
   managerId?: string;
   monthlyListeners: number;
   followerGrowthPct: number;
@@ -277,4 +307,66 @@ export interface IndieMilestone {
   label: string;
   done: boolean;
   description: string;
+}
+
+// --- Legal Foundation Wizard -------------------------------------------------
+
+export interface JurisdictionOption {
+  state: string;
+  abbr: string;
+  filingUrl: string;
+  filingFeeNote: string;
+}
+
+export interface NaicsCode {
+  code: string;
+  label: string;
+  description: string;
+}
+
+export interface MailboxProvider {
+  name: string;
+  url: string;
+  note: string;
+}
+
+export type RoyaltyOrg = 'ASCAP' | 'BMI' | 'SESAC' | 'SoundExchange' | 'Songtrust' | 'The MLC';
+export type RoyaltyRegStatus = 'Not Started' | 'In Progress' | 'Registered';
+
+export interface RoyaltyRegistration {
+  org: RoyaltyOrg;
+  status: RoyaltyRegStatus;
+  url: string;
+  note: string;
+}
+
+export interface BankChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+export interface LegalEntityProfile {
+  artistId: string;
+  jurisdictionAbbr: string | null;
+  entityName: string;
+  entityType: 'LLC' | 'S-Corp' | 'Sole Proprietorship';
+  ein: string;
+  articlesFiled: boolean;
+  businessAddress: string;
+  mailboxProvider: string | null;
+  naicsCodes: NaicsCode[];
+  operatingAgreementGenerated: boolean;
+  operatingAgreementText: string | null;
+  bankChecklist: BankChecklistItem[];
+  royaltyRegistrations: RoyaltyRegistration[];
+}
+
+export interface ContractSignature {
+  id: string;
+  signerName: string;
+  role: UserRole;
+  planChosen: SubscriptionTierId;
+  signatureDataUrl: string;
+  signedAt: string;
 }
