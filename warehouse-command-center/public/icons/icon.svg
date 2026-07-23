@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Warehouse Command Center">
+  <rect width="512" height="512" rx="96" fill="#2f3f55"/>
+  <path d="M96 224 256 128l160 96v192H96z" fill="none" stroke="#e6ebf1" stroke-width="24" stroke-linejoin="round"/>
+  <rect x="176" y="288" width="160" height="128" fill="#7288a3"/>
+  <path d="M176 336h160M256 288v128" stroke="#151d28" stroke-width="16"/>
+</svg>

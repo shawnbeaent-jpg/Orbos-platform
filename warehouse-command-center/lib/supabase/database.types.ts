@@ -130,6 +130,17 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type OrganizationRow = {
+  id: string;
+  name: string;
+  timezone: string;
+  readiness_rules: Json;
+  high_end_material_rules: Json;
+  allow_approved_deferred_template_exceptions: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ProfileRow = {
   id: string;
   organization_id: string;
@@ -219,6 +230,12 @@ export type ProjectMaterialRow = {
   concealed_inspection_open: boolean;
   concealed_damage_notice_deadline: string | null;
   deferred_exception_approved: boolean;
+  deferred_predecessor_milestone: string | null;
+  deferred_template_target_date: string | null;
+  deferred_fabrication_lead_days: number | null;
+  deferred_exception_reason: string | null;
+  deferred_exception_approved_by: string | null;
+  deferred_exception_approved_at: string | null;
   high_value: boolean;
   long_lead: boolean;
   critical_path: boolean;
@@ -457,6 +474,7 @@ type GenericTable<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
 export type Database = {
   public: {
     Tables: {
+      organizations: GenericTable<OrganizationRow>;
       profiles: GenericTable<ProfileRow>;
       projects: GenericTable<ProjectRow>;
       project_materials: GenericTable<ProjectMaterialRow>;
