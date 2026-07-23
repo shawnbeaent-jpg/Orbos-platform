@@ -130,7 +130,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export interface ProfileRow {
+export type ProfileRow = {
   id: string;
   organization_id: string;
   full_name: string;
@@ -141,7 +141,7 @@ export interface ProfileRow {
   updated_at: string;
 }
 
-export interface ProjectRow {
+export type ProjectRow = {
   id: string;
   organization_id: string;
   project_number: string;
@@ -166,7 +166,7 @@ export interface ProjectRow {
   updated_at: string;
 }
 
-export interface ProjectMaterialRow {
+export type ProjectMaterialRow = {
   id: string;
   organization_id: string;
   project_id: string;
@@ -228,7 +228,7 @@ export interface ProjectMaterialRow {
   updated_at: string;
 }
 
-export interface ReceivingInspectionInsert {
+export type ReceivingInspectionInsert = {
   organization_id: string;
   project_id: string;
   delivery_id?: string | null;
@@ -268,7 +268,7 @@ export interface ReceivingInspectionInsert {
   override_reason?: string | null;
 }
 
-export interface DamageClaimRow {
+export type DamageClaimRow = {
   id: string;
   organization_id: string;
   project_id: string;
@@ -295,7 +295,7 @@ export interface DamageClaimRow {
   updated_at: string;
 }
 
-export interface ReadinessSummaryRow {
+export type ReadinessSummaryRow = {
   project_id: string;
   organization_id: string;
   project_number: string;
@@ -317,7 +317,7 @@ export interface ReadinessSummaryRow {
   preapproval_ready: boolean;
 }
 
-export interface NotificationInsert {
+export type NotificationInsert = {
   organization_id: string;
   recipient_id: string;
   project_id?: string | null;
@@ -331,7 +331,7 @@ export interface NotificationInsert {
   dedupe_key: string;
 }
 
-export interface AuditLogInsert {
+export type AuditLogInsert = {
   organization_id: string;
   actor_id: string | null;
   project_id?: string | null;
@@ -343,6 +343,110 @@ export interface AuditLogInsert {
   metadata?: Json;
 }
 
+export type DeliveryRow = {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  vendor: string;
+  carrier: string | null;
+  purchase_order_number: string | null;
+  bol_number: string | null;
+  scheduled_date: string;
+  actual_arrival_at: string | null;
+  completed_at: string | null;
+  status: DeliveryStatus;
+  delay_reason: string | null;
+  revised_eta: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MaterialRequestRow = {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  requested_by: string;
+  source: 'warehouse' | 'home_depot' | 'lowes' | 'supply_house' | 'other_vendor';
+  priority: 'normal' | 'urgent' | 'emergency';
+  needed_by: string;
+  reason: string;
+  status: RequestStatus;
+  approved_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReadinessChecklistRow = {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  checklist_key: string;
+  label: string;
+  required: boolean;
+  completed: boolean;
+  completed_by: string | null;
+  completed_at: string | null;
+  notes: string | null;
+}
+
+export type DocumentRow = {
+  id: string;
+  organization_id: string;
+  project_id: string | null;
+  delivery_id: string | null;
+  project_material_id: string | null;
+  receiving_inspection_id: string | null;
+  claim_id: string | null;
+  document_type: string;
+  storage_bucket: string;
+  storage_path: string;
+  caption: string | null;
+  captured_at: string;
+  created_at: string;
+}
+
+export type DocumentInsert = {
+  organization_id: string;
+  project_id?: string | null;
+  delivery_id?: string | null;
+  project_material_id?: string | null;
+  receiving_inspection_id?: string | null;
+  claim_id?: string | null;
+  document_type: string;
+  storage_bucket?: string;
+  storage_path: string;
+  caption?: string | null;
+}
+
+export type WarehouseInventoryRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  sku: string | null;
+  unit: string;
+  on_hand_quantity: number;
+  committed_quantity: number;
+  reorder_point: number;
+  reorder_quantity: number;
+  warehouse_zone: string | null;
+  active: boolean;
+}
+
+export type ProjectSelectionRow = {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  selection_reference: string;
+  category: string;
+  name: string;
+  manufacturer: string | null;
+  model_number: string | null;
+  finish_name: string | null;
+  status: SelectionStatus;
+  required: boolean;
+  design_revision_id: string;
+}
+
 type GenericTable<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
   Insert: Insert;
@@ -350,19 +454,25 @@ type GenericTable<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Relationships: [];
 };
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: GenericTable<ProfileRow>;
       projects: GenericTable<ProjectRow>;
       project_materials: GenericTable<ProjectMaterialRow>;
       damage_claims: GenericTable<DamageClaimRow>;
+      deliveries: GenericTable<DeliveryRow>;
+      material_requests: GenericTable<MaterialRequestRow>;
+      project_readiness_checklist: GenericTable<ReadinessChecklistRow>;
+      documents: GenericTable<DocumentRow, DocumentInsert>;
+      warehouse_inventory: GenericTable<WarehouseInventoryRow>;
+      project_selections: GenericTable<ProjectSelectionRow>;
       receiving_inspections: GenericTable<ReceivingInspectionInsert & { id: string; created_at: string }, ReceivingInspectionInsert>;
       notifications: GenericTable<NotificationInsert & { id: string; read_at: string | null; created_at: string }, NotificationInsert>;
       audit_log: GenericTable<AuditLogInsert & { id: number; occurred_at: string }, AuditLogInsert>;
     };
     Views: {
-      project_readiness_summary: { Row: ReadinessSummaryRow };
+      project_readiness_summary: { Row: ReadinessSummaryRow; Relationships: [] };
     };
     Functions: {
       approve_project_readiness: { Args: { p_project_id: string }; Returns: undefined };
