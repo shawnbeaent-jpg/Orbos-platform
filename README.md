@@ -6,6 +6,29 @@ Tailwind + Prisma + Zod. Branch: `claude/ga-land-clearing-build-lnoibj`.
 
 > Positioning: *Georgia's Land Clearing and Site Preparation Partner* · Tagline: *From Overgrown to Build-Ready.*
 
+## Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fshawnbeaent-jpg%2FOrbos-platform&env=DATABASE_URL,NEXTAUTH_SECRET,NEXTAUTH_URL,ADMIN_USERNAME,ADMIN_PASSWORD&envDescription=Postgres%20connection%2C%20auth%20secret%2C%20production%20URL%2C%20and%20admin%20login&envLink=https%3A%2F%2Fgithub.com%2Fshawnbeaent-jpg%2FOrbos-platform%2Fblob%2Fclaude%2Fga-land-clearing-build-lnoibj%2Fdocs%2FDEPLOY.md&project-name=ga-land-clearing&repository-name=ga-land-clearing)
+
+The button clones this repo into your account and deploys it. You'll be prompted for the
+required environment variables below; create a Postgres database first (e.g. free at
+[Supabase](https://supabase.com) or [Neon](https://neon.tech)).
+
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | Your Postgres connection string |
+| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Your deployment URL (e.g. `https://ga-land-clearing.vercel.app`) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Admin dashboard login |
+
+The build runs `prisma migrate deploy` automatically, so your database schema is created
+on first deploy. Optional keys (email, SMS, maps, analytics, uploads) are in `.env.example`
+and light up features when added. Full walkthrough, rollback, and go-live steps:
+[`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+> **Note:** the button deploys the repository's **default branch**. Merge PR&nbsp;#2 first so
+> your deploy includes admin auth, database migrations, and file uploads.
+
 ## Quick start
 
 ```bash
