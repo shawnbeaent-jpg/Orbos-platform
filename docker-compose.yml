@@ -1,0 +1,25 @@
+# Local Postgres for development. Start with: docker compose up -d
+# Then set in .env.local:
+#   DATABASE_URL="postgresql://galc:galc@localhost:5432/galandclearing?schema=public"
+# and run: npx prisma migrate deploy   (or: npx prisma migrate dev)
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: galc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: galc
+      POSTGRES_PASSWORD: galc
+      POSTGRES_DB: galandclearing
+    ports:
+      - "5432:5432"
+    volumes:
+      - galc_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U galc -d galandclearing"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  galc_pgdata:
