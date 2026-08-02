@@ -137,3 +137,108 @@ model AgentSuggestion {
   accepted  Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+// ============================================================================
+// GA Land Clearing — public website lead capture (branch: ga-land-clearing).
+// Leads arrive from the multi-step Request-a-Quote flow and the commercial /
+// builder / realtor forms. Scored 0–100 at intake; category + score are
+// suggestions the internal team can override (no unconfirmed changes rule).
+// ============================================================================
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  SITE_VISIT
+  PROPOSAL
+  WON
+  SCHEDULED
+  COMPLETED
+  LOST
+  NURTURE
+}
+
+enum LeadCategory {
+  PRIORITY
+  QUALIFIED
+  NEEDS_REVIEW
+  LOW_QUALITY
+}
+
+model Lead {
+  id             String       @id @default(cuid())
+  publicId       String       @unique // human-friendly lead ID, e.g. GLC-8F3K2A
+  // Contact
+  name           String
+  email          String
+  phone          String
+  smsConsent     Boolean      @default(false)
+  // Property
+  address        String?
+  city           String?
+  county         String?
+  propertyType   String?      // residential | commercial | agricultural | municipal
+  acreage        String?      // banded value (under-1, 1-3, ...)
+  access         String?
+  // Project
+  services       String       @default("[]") // JSON array of service slugs
+  siteConditions String?
+  timeline       String?
+  budget         String?
+  ownership      String?
+  // Files
+  uploadKeys     String       @default("[]") // JSON array of stored file references
+  // Attribution
+  source         String?      // form origin: quote | commercial | builder | realtor
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  referrer       String?
+  // Scoring (suggestions — override via scoreOverride)
+  score          Int          @default(0)
+  scoreOverride  Int?
+  category       LeadCategory @default(NEEDS_REVIEW)
+  scoreFactors   String       @default("[]") // JSON breakdown for the admin view
+  // Pipeline
+  stage          LeadStage    @default(NEW)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  notes          LeadNote[]
+  tasks          LeadTask[]
+
+  @@index([stage])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model LeadNote {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author    String   @default("system")
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model LeadTask {
+  id        String    @id @default(cuid())
+  leadId    String
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  title     String
+  dueAt     DateTime?
+  done      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
+
+// Immutable audit trail for admin actions (stage changes, score overrides).
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  entity    String
+  entityId  String
+  detail    String   @default("{}") // JSON
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}
