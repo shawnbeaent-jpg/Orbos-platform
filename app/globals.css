@@ -1,3 +1,73 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* --font-heading and --font-body are provided by next/font (see app/layout.tsx). */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-sand text-midnight font-body antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+
+  /* Visible focus ring for keyboard users (WCAG 2.2 AA) */
+  :focus-visible {
+    outline: 3px solid #22a06b;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: #d8a94a;
+    color: #0b1420;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-base font-semibold
+      transition-all duration-200 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply btn bg-emerald text-white shadow-cta hover:bg-[#1c8a5b] hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-gold {
+    @apply btn bg-gold text-midnight hover:bg-[#c99a3c] hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-white/25 bg-white/5 text-white backdrop-blur hover:border-white/50 hover:bg-white/10;
+  }
+
+  .btn-ghost {
+    @apply btn border-2 border-midnight/[0.15] bg-white text-midnight hover:border-emerald hover:text-forest;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-emerald;
+  }
+
+  .card {
+    @apply rounded-2xl border border-midnight/[0.08] bg-white shadow-card;
+  }
+
+  .section {
+    @apply py-16 sm:py-24;
+  }
+
+  .prose-scope :where(p) {
+    @apply leading-relaxed text-brandslate;
+  }
+}
