@@ -85,8 +85,11 @@ These are stubbed with env vars + graceful no-ops, ready to enable:
 - **Email (Resend)** / **SMS (Twilio)** — add keys to enable notifications.
 - **Google Maps/Places** address autocomplete — key placeholder present.
 - **Analytics (GA4/Meta), Turnstile, Sentry** — env placeholders present.
-- **Secure file uploads** — form captures file references; wire cloud storage (e.g.
-  Supabase Storage) to persist the files themselves.
+- **Secure file uploads** — implemented via Supabase Storage signed URLs (browser →
+  private bucket, never through the function). Set `SUPABASE_URL` +
+  `SUPABASE_SERVICE_ROLE_KEY` and create a private `lead-uploads` bucket to enable;
+  without config the form records file names only. Admin views files via short-lived
+  signed download links.
 - **AI "GA Land Advisor" assistant** — optional; not built this pass.
 
 See `.env.example` for every variable.

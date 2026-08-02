@@ -70,7 +70,19 @@ export default async function LeadDetail({ params }: { params: { id: string } })
               {uploads.length > 0 && (
                 <div className="mt-4">
                   <p className="text-xs font-semibold uppercase text-brandslate">Files ({uploads.length})</p>
-                  <ul className="mt-1 text-sm text-midnight">{uploads.map((u, i) => <li key={i}>{u}</li>)}</ul>
+                  <ul className="mt-1 space-y-1 text-sm text-midnight">
+                    {uploads.map((u, i) => (
+                      <li key={i}>
+                        {u.includes("/") ? (
+                          <a href={`/api/admin/uploads/download?path=${encodeURIComponent(u)}`} target="_blank" rel="noopener noreferrer" className="text-forest underline">
+                            {u.split("/").pop()}
+                          </a>
+                        ) : (
+                          <span>{u} <span className="text-xs text-brandslate">(name only — no stored file)</span></span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </Panel>

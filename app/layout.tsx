@@ -5,6 +5,7 @@ import { site } from "@/lib/site";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileCTABar } from "@/components/MobileCTABar";
+import { Analytics } from "@/components/Analytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -91,6 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
         <MobileCTABar />
+        <Analytics />
       </body>
     </html>
   );

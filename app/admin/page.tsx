@@ -1,12 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getAdminData, LEAD_STAGES, stageLabel, categoryStyle, effectiveScore } from "@/lib/admin";
+import { adminAuthConfigured } from "@/lib/auth";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — Lead Pipeline", robots: { index: false, follow: false } };
 
 export default async function AdminDashboard() {
   const data = await getAdminData();
+  const authConfigured = adminAuthConfigured();
   const byStage = LEAD_STAGES.map((stage) => ({
     stage,
     leads: data.leads.filter((l) => l.stage === stage),
@@ -22,15 +25,18 @@ export default async function AdminDashboard() {
           </div>
           <div className="flex gap-3">
             <a href="/api/admin/leads/export" className="btn-ghost !py-2.5">Export CSV</a>
-            <Link href="/request-quote" className="btn-primary !py-2.5">New test lead</Link>
+            {authConfigured && <SignOutButton />}
           </div>
         </div>
 
-        {/* Auth reminder — real auth is required before production (escalation item). */}
-        <div className="mt-6 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-midnight">
-          <strong>Access control not yet enabled.</strong> This dashboard is unauthenticated. Add authentication
-          (Auth.js is already a dependency) and restrict <code>/admin</code> before exposing it publicly.
-        </div>
+        {/* Show a warning only when admin auth is NOT configured. */}
+        {!authConfigured && (
+          <div className="mt-6 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-midnight">
+            <strong>Access control not enabled.</strong> Set <code>ADMIN_USERNAME</code>, <code>ADMIN_PASSWORD</code>,
+            and <code>NEXTAUTH_SECRET</code> to require sign-in for <code>/admin</code>. Until then this dashboard is
+            open (intended for local development only).
+          </div>
+        )}
 
         {!data.ok && (
           <div className="mt-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">

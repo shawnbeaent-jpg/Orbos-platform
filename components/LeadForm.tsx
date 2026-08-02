@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { services } from "@/lib/services";
 import { Icon } from "./Icon";
 
+type UploadItem = { id: string; name: string; key: string; status: "uploading" | "done" | "error" };
+
+let uploadCounter = 0;
+
 type FormState = {
   name: string;
   email: string;
@@ -18,7 +22,7 @@ type FormState = {
   access: string;
   services: string[];
   siteConditions: string;
-  uploadNames: string[];
+  uploads: UploadItem[];
   timeline: string;
   budget: string;
   ownership: string;
@@ -38,7 +42,7 @@ const initial: FormState = {
   access: "",
   services: [],
   siteConditions: "",
-  uploadNames: [],
+  uploads: [],
   timeline: "",
   budget: "",
   ownership: "",
@@ -118,6 +122,49 @@ export function LeadForm({
         : [...f.services, slug],
     }));
 
+  // Upload files via signed URLs when storage is configured; otherwise record
+  // the file name so the request still carries the reference. Never blocks the
+  // form — failures downgrade to name-only.
+  async function handleFiles(files: FileList | null) {
+    const list = Array.from(files ?? []).slice(0, 20);
+    for (const file of list) {
+      const id = `u${++uploadCounter}`;
+      setForm((f) => ({ ...f, uploads: [...f.uploads, { id, name: file.name, key: file.name, status: "uploading" }] }));
+      const markAt = (_name: string, patch: Partial<UploadItem>) =>
+        setForm((f) => ({
+          ...f,
+          uploads: f.uploads.map((u) => (u.id === id ? { ...u, ...patch } : u)),
+        }));
+      try {
+        const signRes = await fetch("/api/uploads/sign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", size: file.size }),
+        });
+        const sign = await signRes.json();
+        if (!signRes.ok) {
+          // e.g. unsupported type / too large — keep the name, mark error.
+          markAt(file.name, { status: "error" });
+          continue;
+        }
+        if (!sign.configured) {
+          // No storage backend — name-only reference is the graceful fallback.
+          markAt(file.name, { status: "done", key: file.name });
+          continue;
+        }
+        const put = await fetch(sign.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        });
+        if (!put.ok) throw new Error(`upload ${put.status}`);
+        markAt(file.name, { status: "done", key: sign.path });
+      } catch {
+        markAt(file.name, { status: "error" });
+      }
+    }
+  }
+
   function validateStep(s: number): boolean {
     const e: Record<string, string> = {};
     if (s === 0) {
@@ -161,7 +208,7 @@ export function LeadForm({
           access: form.access,
           services: form.services,
           siteConditions: form.siteConditions,
-          uploadKeys: form.uploadNames,
+          uploadKeys: form.uploads.filter((u) => u.status !== "error").map((u) => u.key),
           timeline: form.timeline || undefined,
           budget: form.budget || undefined,
           ownership: form.ownership || undefined,
@@ -315,23 +362,27 @@ export function LeadForm({
                 className="hidden"
                 accept="image/*,.pdf"
                 onChange={(e) => {
-                  const names = Array.from(e.target.files ?? []).slice(0, 20).map((f) => f.name);
-                  set("uploadNames", names);
+                  void handleFiles(e.target.files);
+                  e.target.value = "";
                 }}
               />
             </label>
-            {form.uploadNames.length > 0 && (
-              <ul className="mt-4 space-y-1.5 text-sm text-brandslate">
-                {form.uploadNames.map((n, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <Icon name="check" className="h-4 w-4 text-emerald" /> {n}
+            {form.uploads.length > 0 && (
+              <ul className="mt-4 space-y-1.5 text-sm">
+                {form.uploads.map((u) => (
+                  <li key={u.id} className="flex items-center gap-2 text-brandslate">
+                    {u.status === "uploading" && <span className="h-4 w-4 animate-spin rounded-full border-2 border-midnight/20 border-t-emerald" aria-hidden />}
+                    {u.status === "done" && <Icon name="check" className="h-4 w-4 text-emerald" />}
+                    {u.status === "error" && <span className="text-error" aria-hidden>!</span>}
+                    <span className={u.status === "error" ? "text-error" : ""}>{u.name}</span>
+                    {u.status === "error" && <span className="text-xs text-error">— couldn&apos;t upload, we&apos;ll note it</span>}
                   </li>
                 ))}
               </ul>
             )}
             <p className="mt-3 text-xs text-brandslate">
-              File references are attached to your request. Secure file storage is enabled once cloud storage is
-              configured for the site.
+              Files are uploaded securely when cloud storage is configured; otherwise the file name is attached to your
+              request. JPG, PNG, WebP, HEIC, or PDF up to 15&nbsp;MB each.
             </p>
           </Fieldset>
         )}
@@ -361,7 +412,7 @@ export function LeadForm({
               <Row label="Type / acreage" value={[labelFor(propertyTypeOpts, form.propertyType), labelFor(acreageOpts, form.acreage)].filter(Boolean).join(" · ") || "—"} />
               <Row label="Services" value={form.services.map((s) => services.find((x) => x.slug === s)?.name).filter(Boolean).join(", ") || "—"} />
               <Row label="Timeline / budget" value={[labelFor(timelineOpts, form.timeline), labelFor(budgetOpts, form.budget)].filter(Boolean).join(" · ") || "—"} />
-              <Row label="Files" value={form.uploadNames.length ? `${form.uploadNames.length} attached` : "None"} />
+              <Row label="Files" value={form.uploads.length ? `${form.uploads.filter((u) => u.status !== "error").length} attached` : "None"} />
             </dl>
             {submitError && (
               <p className="mt-4 rounded-lg bg-error/10 px-4 py-3 text-sm font-medium text-error">{submitError}</p>
